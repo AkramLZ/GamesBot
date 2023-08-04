@@ -1,31 +1,29 @@
 package me.akraml.gamesbot.game.impl;
 
+import me.akraml.gamesbot.GamesBotBootstrap;
 import me.akraml.gamesbot.game.AbstractGame;
+import me.akraml.gamesbot.game.GameChannel;
 import me.akraml.gamesbot.game.GameManager;
 import me.akraml.gamesbot.utility.StringUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.TimerTask;
+import java.util.*;
 
 public class SentencesGame extends AbstractGame {
 
-    private final GameManager gameManager;
+    private final GameChannel gameChannel;
     private final List<String> sentences = new ArrayList<>();
     private final Random random = new Random();
     private String latestAnswer;
 
-    public SentencesGame(GameManager gameManager) {
+    public SentencesGame(GameChannel gameChannel) {
         super("-جمل");
-        this.gameManager = gameManager;
-        // for debug purpose
-        sentences.add("من علمني حرفا صرت له عبدا");
-        sentences.add("من طلب العلا سهر الليالي");
-        sentences.add("عبدالحق اشعري مجنون ياخي");
+        this.gameChannel = gameChannel;
+        // Load sentences
+        final GamesBotBootstrap bootstrap = GamesBotBootstrap.getInstance();
+        sentences.addAll(bootstrap.getConfig().getStringList("games.sentences"));
     }
 
     @Override
@@ -41,11 +39,11 @@ public class SentencesGame extends AbstractGame {
                 .setColor(0xADD8E6)
                 .build();
         event.getChannel().sendMessageEmbeds(embed).queue();
-        gameManager.getGameTimer().schedule(new TimerTask() {
+        gameChannel.getGameTimer().schedule(new TimerTask() {
             @Override
             public void run() {
-                if (gameManager.getGameTime().incrementAndGet() >= 15) {
-                    gameManager.handleTimeout(event);
+                if (gameChannel.getGameTime().incrementAndGet() >= 15) {
+                    gameChannel.handleTimeout(event);
                 }
             }
         }, 0L, 1000L);

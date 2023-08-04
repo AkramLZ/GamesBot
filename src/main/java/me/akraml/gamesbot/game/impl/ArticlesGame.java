@@ -1,6 +1,8 @@
 package me.akraml.gamesbot.game.impl;
 
+import me.akraml.gamesbot.GamesBotBootstrap;
 import me.akraml.gamesbot.game.AbstractGame;
+import me.akraml.gamesbot.game.GameChannel;
 import me.akraml.gamesbot.game.GameManager;
 import me.akraml.gamesbot.utility.StringUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -14,18 +16,17 @@ import java.util.TimerTask;
 
 public class ArticlesGame extends AbstractGame {
 
-    private final GameManager gameManager;
+    private final GameChannel gameChannel;
     private final List<String> sentences = new ArrayList<>();
     private final Random random = new Random();
     private String latestAnswer;
 
-    public ArticlesGame(GameManager gameManager) {
+    public ArticlesGame(final GameChannel gameChannel) {
         super("-مقالات");
-        this.gameManager = gameManager;
-        // for debug purpose
-        sentences.add("يروى ان اعرابيا تخنث فراوده اخاه قائلا هاك وماك مالي اراك مطئطئا راسكا رافع وراكا");
-        sentences.add("فرد عليه مبتسما هاك وماك وما ادراكا فلو عرف النائك لذة المنتاك لنتاك");
-        sentences.add("فاعجب الاعرابي بكلام اخيه فتخنث معه");
+        this.gameChannel = gameChannel;
+        // Load sentences
+        final GamesBotBootstrap bootstrap = GamesBotBootstrap.getInstance();
+        sentences.addAll(bootstrap.getConfig().getStringList("games.articles"));
     }
 
     @Override
@@ -41,11 +42,11 @@ public class ArticlesGame extends AbstractGame {
                 .setColor(0xADD8E6)
                 .build();
         event.getChannel().sendMessageEmbeds(embed).queue();
-        gameManager.getGameTimer().schedule(new TimerTask() {
+        gameChannel.getGameTimer().schedule(new TimerTask() {
             @Override
             public void run() {
-                if (gameManager.getGameTime().incrementAndGet() >= 20) {
-                    gameManager.handleTimeout(event);
+                if (gameChannel.getGameTime().incrementAndGet() >= 20) {
+                    gameChannel.handleTimeout(event);
                 }
             }
         }, 0L, 1000L);
@@ -55,4 +56,5 @@ public class ArticlesGame extends AbstractGame {
     public boolean answerMatches(String answer) {
         return latestAnswer != null && latestAnswer.equalsIgnoreCase(answer);
     }
+
 }

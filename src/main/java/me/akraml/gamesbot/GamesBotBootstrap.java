@@ -1,7 +1,9 @@
 package me.akraml.gamesbot;
 
+import me.akraml.gamesbot.game.GameChannel;
 import me.akraml.gamesbot.game.GameManager;
 import me.akraml.gamesbot.game.impl.*;
+import me.akraml.gamesbot.storage.Storage;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -16,12 +18,16 @@ public class GamesBotBootstrap {
 
     private JDA botInstance;
     private YamlConfiguration config;
+    private final Storage storage;
     private final GameManager gameManager = new GameManager();
+    private static GamesBotBootstrap INSTANCE;
 
     public GamesBotBootstrap() {
-        /*final File configFile = new File("config.yml");
+        INSTANCE = this;
+        storage = new Storage();
+        final File configFile = new File("config.yml");
         if (!configFile.exists()) {
-            try (final InputStream stream = GamesBot.class.getResourceAsStream("config.yml")) {
+            try (final InputStream stream = GamesBot.class.getResourceAsStream("/config.yml")) {
                 if (stream != null) Files.copy(stream, configFile.toPath());
             } catch (Exception exception) {
                 GamesBot.getLogger().log(Level.SEVERE, "Failed to copy config", exception);
@@ -34,26 +40,44 @@ public class GamesBotBootstrap {
         } catch (Exception exception) {
             GamesBot.getLogger().log(Level.SEVERE, "Failed to load config", exception);
             System.exit(1);
-        }*/
+        }
+    }
+
+    public static GamesBotBootstrap getInstance() {
+        return INSTANCE;
+    }
+
+    public YamlConfiguration getConfig() {
+        return config;
+    }
+
+    public Storage getStorage() {
+        return storage;
     }
 
     public void start() {
         botInstance = JDABuilder
-                .createDefault("MTEzNjY5MzE5NjI4MjQwMDkxOQ.GUWDrn.wJmWcfu5ATtPF9-hj6s4pC2a2OehYr8hN1M3rQ")
+                .createDefault(getConfig().getString("token"))
                 .enableIntents(GatewayIntent.MESSAGE_CONTENT)
                 .build();
         botInstance.addEventListener(new MessageListener(this));
-        gameManager.registerGame(new SentencesGame(gameManager));
-        gameManager.registerGame(new DismantlingGame(gameManager));
-        gameManager.registerGame(new DismantleGame(gameManager));
-        gameManager.registerGame(new ArticlesGame(gameManager));
-        gameManager.registerGame(new TranslateGame(gameManager));
-        gameManager.registerGame(new FastGame(gameManager));
-        gameManager.registerGame(new FlagsGame(gameManager));
+        for (final long channelId : getConfig().getLongList("channels")) {
+            gameManager.registerChannel(channelId);
+            final GameChannel gameChannel = gameManager.getChannel(channelId);
+            gameChannel.registerGames(
+                    new SentencesGame(gameChannel),
+                    new DismantlingGame(gameChannel),
+                    new DismantleGame(gameChannel),
+                    new ArticlesGame(gameChannel),
+                    new TranslateGame(gameChannel),
+                    new FastGame(gameChannel),
+                    new FlagsGame(gameChannel)
+            );
+        }
     }
 
     public void shutdown() {
-
+        botInstance.shutdown();
     }
 
     public GameManager getGameManager() {

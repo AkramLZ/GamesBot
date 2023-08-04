@@ -8,6 +8,13 @@ public class GamesBot {
 
     public static void main(String... args) {
         System.setProperty("java.util.logging.SimpleFormatter.format", "[%1$tT] [%4$-3s] %5$s%n");
+        try {
+            Class.forName("org.h2.Driver");
+        } catch (Exception exception) {
+            exception.printStackTrace();
+            System.exit(1);
+            return;
+        }
         GamesBotBootstrap bootstrap = new GamesBotBootstrap();
         bootstrap.start();
         Runtime.getRuntime().addShutdownHook(new Thread(bootstrap::shutdown));

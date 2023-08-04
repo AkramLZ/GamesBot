@@ -1,31 +1,41 @@
 package me.akraml.gamesbot.game.impl;
 
+import me.akraml.gamesbot.GamesBotBootstrap;
 import me.akraml.gamesbot.game.AbstractGame;
+import me.akraml.gamesbot.game.GameChannel;
 import me.akraml.gamesbot.game.GameManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class TranslateGame extends AbstractGame {
 
-    private final GameManager gameManager;
-    private final Map<String, String> words = new HashMap<>();
+    private final GameChannel gameChannel;
+    private final Map<String, Set<String>> words = new HashMap<>();
     private final Random random = new Random();
-    private String latestAnswer;
+    private Set<String> latestAnswer;
 
-    public TranslateGame(GameManager gameManager) {
+    public TranslateGame(GameChannel gameChannel) {
         super("-ترجم");
-        this.gameManager = gameManager;
-        words.put("hello", "مرحبا");
-        words.put("nigger", "زنجي");
+        this.gameChannel = gameChannel;
+        // Load words
+        final GamesBotBootstrap bootstrap = GamesBotBootstrap.getInstance();
+        for (final String string : bootstrap.getConfig().getStringList("games.translate")) {
+            final List<String> list = new ArrayList<>(Arrays.asList(string.split("\\|")));
+            final String word = list.get(0);
+            list.remove(0);
+            words.put(word, new HashSet<>(list));
+        }
     }
 
     @Override
     public void handle(MessageReceivedEvent event) {
         this.lastStart = System.currentTimeMillis();
-        Map.Entry<String, String> answer = getRandomEntry();
+        Map.Entry<String, Set<String>> answer = getRandomEntry();
+        if (answer == null) return; // Impossible
         latestAnswer = answer.getValue();
         final MessageEmbed embed = new EmbedBuilder()
                 .setAuthor("ألعاب", null, event.getGuild().getIconUrl())
@@ -37,32 +47,32 @@ public class TranslateGame extends AbstractGame {
                 .setColor(0xADD8E6)
                 .build();
         event.getChannel().sendMessageEmbeds(embed).queue();
-        gameManager.getGameTimer().schedule(new TimerTask() {
+        gameChannel.getGameTimer().schedule(new TimerTask() {
             @Override
             public void run() {
-                if (gameManager.getGameTime().incrementAndGet() >= 10) {
-                    gameManager.handleTimeout(event);
+                if (gameChannel.getGameTime().incrementAndGet() >= 10) {
+                    gameChannel.handleTimeout(event);
                 }
             }
         }, 0L, 1000L);
     }
 
-    private Map.Entry<String, String> getRandomEntry() {
-        Set<Map.Entry<String, String>> entrySet = words.entrySet();
+    private Map.Entry<String, Set<String>> getRandomEntry() {
+        Set<Map.Entry<String, Set<String>>> entrySet = words.entrySet();
         final int randomSlot = random.nextInt(entrySet.size());
         int i = 0;
-        for (final Map.Entry<String, String> entry : entrySet) {
+        for (final Map.Entry<String, Set<String>> entry : entrySet) {
             if (i == randomSlot) {
                 return entry;
             }
             i++;
         }
         // impossible
-        return entrySet.stream().findFirst().orElseThrow();
+        return entrySet.stream().findFirst().orElse(null);
     }
 
     @Override
     public boolean answerMatches(String answer) {
-        return latestAnswer != null && latestAnswer.equalsIgnoreCase(answer);
+        return latestAnswer != null && latestAnswer.contains(answer);
     }
 }

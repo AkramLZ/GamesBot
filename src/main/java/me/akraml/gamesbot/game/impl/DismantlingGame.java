@@ -1,6 +1,8 @@
 package me.akraml.gamesbot.game.impl;
 
+import me.akraml.gamesbot.GamesBotBootstrap;
 import me.akraml.gamesbot.game.AbstractGame;
+import me.akraml.gamesbot.game.GameChannel;
 import me.akraml.gamesbot.game.GameManager;
 import me.akraml.gamesbot.utility.StringUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -14,18 +16,17 @@ import java.util.TimerTask;
 
 public class DismantlingGame extends AbstractGame {
 
-    private final GameManager gameManager;
+    private final GameChannel gameChannel;
     private final List<String> sentences = new ArrayList<>();
     private final Random random = new Random();
     private String latestAnswer;
 
-    public DismantlingGame(GameManager gameManager) {
+    public DismantlingGame(GameChannel gameChannel) {
         super("-تفكيك");
-        this.gameManager = gameManager;
-        // for debug purpose
-        sentences.add("يتم الجنون");
-        sentences.add("سكار يخطط لإنقلاب");
-        sentences.add("مدير الكروب يسوي كذا");
+        this.gameChannel = gameChannel;
+        // Load sentences
+        final GamesBotBootstrap bootstrap = GamesBotBootstrap.getInstance();
+        sentences.addAll(bootstrap.getConfig().getStringList("games.dismantling"));
     }
 
     @Override
@@ -41,11 +42,11 @@ public class DismantlingGame extends AbstractGame {
                 .setColor(0xADD8E6)
                 .build();
         event.getChannel().sendMessageEmbeds(embed).queue();
-        gameManager.getGameTimer().schedule(new TimerTask() {
+        gameChannel.getGameTimer().schedule(new TimerTask() {
             @Override
             public void run() {
-                if (gameManager.getGameTime().incrementAndGet() >= 30) {
-                    gameManager.handleTimeout(event);
+                if (gameChannel.getGameTime().incrementAndGet() >= 30) {
+                    gameChannel.handleTimeout(event);
                 }
             }
         }, 0L, 1000L);

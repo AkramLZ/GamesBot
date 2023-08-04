@@ -1,6 +1,8 @@
 package me.akraml.gamesbot.game.impl;
 
+import me.akraml.gamesbot.GamesBotBootstrap;
 import me.akraml.gamesbot.game.AbstractGame;
+import me.akraml.gamesbot.game.GameChannel;
 import me.akraml.gamesbot.game.GameManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -10,15 +12,20 @@ import java.util.*;
 
 public class FlagsGame extends AbstractGame {
 
-    private final GameManager gameManager;
+    private final GameChannel gameChannel;
     private final Map<String, String> flags = new HashMap<>();
     private final Random random = new Random();
     private String latestAnswer;
 
-    public FlagsGame(GameManager gameManager) {
+    public FlagsGame(GameChannel gameChannel) {
         super("-اعلام");
-        this.gameManager = gameManager;
-        flags.put("باكستان", "https://media.discordapp.net/attachments/991426456938872853/1136722188137926746/437178805677981696.png");
+        this.gameChannel = gameChannel;
+        // Load flags
+        final GamesBotBootstrap bootstrap = GamesBotBootstrap.getInstance();
+        for (final String string : bootstrap.getConfig().getStringList("games.flags")) {
+            final String[] values = string.split("\\|");
+            flags.put(values[0], values[1]);
+        }
     }
 
     @Override
@@ -36,11 +43,11 @@ public class FlagsGame extends AbstractGame {
                 .setColor(0xADD8E6)
                 .build();
         event.getChannel().sendMessageEmbeds(embed).queue();
-        gameManager.getGameTimer().schedule(new TimerTask() {
+        gameChannel.getGameTimer().schedule(new TimerTask() {
             @Override
             public void run() {
-                if (gameManager.getGameTime().incrementAndGet() >= 10) {
-                    gameManager.handleTimeout(event);
+                if (gameChannel.getGameTime().incrementAndGet() >= 10) {
+                    gameChannel.handleTimeout(event);
                 }
             }
         }, 0L, 1000L);

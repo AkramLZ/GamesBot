@@ -1,6 +1,7 @@
 package me.akraml.gamesbot;
 
 import me.akraml.gamesbot.game.Game;
+import me.akraml.gamesbot.game.GameChannel;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.EventListener;
@@ -18,22 +19,24 @@ public class MessageListener implements EventListener {
         if (!event.isFromGuild())
             return;
         final String message = event.getMessage().getContentRaw();
-        System.out.println("[DEBUG] " + message);
-        Game game = bootstrap.getGameManager().getByCommand(message);
+        final GameChannel channel = bootstrap.getGameManager().getChannel(event.getChannel().getIdLong());
+        if (channel == null)
+            return;
+        Game game = channel.getByCommand(message);
         if (game == null) {
-            game = bootstrap.getGameManager().getCurrentGame();
+            game = channel.getCurrentGame();
             if (game == null)
                 return;
             if (game.answerMatches(message)) {
-                bootstrap.getGameManager().handleWin(event);
+                channel.handleWin(event);
             }
             return;
         }
-        if (bootstrap.getGameManager().getCurrentGame() != null) {
+        if (channel.getCurrentGame() != null) {
             event.getMessage().reply("**لا يمكنك بدء لعبة جديدة في حين أن هناك لعبة اخرى قيد التشغيل!**").complete();
             return;
         }
-        bootstrap.getGameManager().setCurrentGame(game);
+        channel.setCurrentGame(game);
         game.handle(event);
     }
 
