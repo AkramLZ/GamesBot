@@ -3,6 +3,8 @@ package me.akraml.gamesbot;
 import me.akraml.gamesbot.game.GameChannel;
 import me.akraml.gamesbot.game.GameManager;
 import me.akraml.gamesbot.game.impl.*;
+import me.akraml.gamesbot.game.impl.command.HelpCommand;
+import me.akraml.gamesbot.game.impl.command.TopCommand;
 import me.akraml.gamesbot.storage.Storage;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
@@ -71,7 +73,10 @@ public class GamesBotBootstrap {
                     new ArticlesGame(gameChannel),
                     new TranslateGame(gameChannel),
                     new FastGame(gameChannel),
-                    new FlagsGame(gameChannel)
+                    new FlagsGame(gameChannel),
+                    // Commands
+                    new TopCommand(),
+                    new HelpCommand()
             );
         }
     }
@@ -82,6 +87,14 @@ public class GamesBotBootstrap {
 
     public GameManager getGameManager() {
         return gameManager;
+    }
+
+    public void saveConfig() {
+        try {
+            config.save(new File("config.yml"));
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
     }
 
 }

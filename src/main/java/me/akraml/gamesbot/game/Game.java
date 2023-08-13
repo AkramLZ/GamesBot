@@ -16,4 +16,6 @@ public interface Game {
 
     long getLastStart();
 
+    boolean canBypassCurrentGame();
+
 }

@@ -91,4 +91,21 @@ public class Storage {
         return list;
     }
 
+    public int getPosition(long id) {
+        try (Connection connection = dataSource.getConnection();
+             PreparedStatement statement = connection.prepareStatement(
+                "SELECT COUNT(*) AS position FROM games_points WHERE POINTS > (SELECT POINTS FROM games_points WHERE ID = ?)"
+        )) {
+            statement.setLong(1, id);
+            try (final ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getInt("position");
+                }
+            }
+        } catch (Exception exception) {
+            exception.printStackTrace();
+        }
+        return -1;
+    }
+
 }

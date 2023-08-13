@@ -8,8 +8,8 @@ version = "1.0-SNAPSHOT"
 
 tasks.compileJava {
     options.encoding = "UTF-8"
-    sourceCompatibility = "1.8"
-    targetCompatibility = "1.8"
+    sourceCompatibility = "16"
+    targetCompatibility = "16"
 }
 
 tasks.withType<Jar> {

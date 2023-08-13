@@ -3,7 +3,6 @@ package me.akraml.gamesbot.game.impl;
 import me.akraml.gamesbot.GamesBotBootstrap;
 import me.akraml.gamesbot.game.AbstractGame;
 import me.akraml.gamesbot.game.GameChannel;
-import me.akraml.gamesbot.game.GameManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
@@ -46,7 +45,7 @@ public class FlagsGame extends AbstractGame {
         gameChannel.getGameTimer().schedule(new TimerTask() {
             @Override
             public void run() {
-                if (gameChannel.getGameTime().incrementAndGet() >= 10) {
+                if (gameChannel.getGameTime().incrementAndGet() >= 15) {
                     gameChannel.handleTimeout(event);
                 }
             }
@@ -69,6 +68,9 @@ public class FlagsGame extends AbstractGame {
 
     @Override
     public boolean answerMatches(String answer) {
-        return latestAnswer != null && latestAnswer.equalsIgnoreCase(answer);
+        return latestAnswer != null && (latestAnswer.equalsIgnoreCase(answer)
+                || latestAnswer.equalsIgnoreCase(answer.replace("أ", "ا"))
+                || latestAnswer.equalsIgnoreCase(answer.replace("إ", "ا"))
+                || latestAnswer.equalsIgnoreCase(answer.replace("آ", "ا")));
     }
 }

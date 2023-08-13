@@ -29,4 +29,9 @@ public abstract class AbstractGame implements Game {
     public long getLastStart() {
         return lastStart;
     }
+
+    @Override
+    public boolean canBypassCurrentGame() {
+        return false;
+    }
 }

@@ -32,11 +32,12 @@ public class MessageListener implements EventListener {
             }
             return;
         }
-        if (channel.getCurrentGame() != null) {
+        if (channel.getCurrentGame() != null && !game.canBypassCurrentGame()) {
             event.getMessage().reply("**لا يمكنك بدء لعبة جديدة في حين أن هناك لعبة اخرى قيد التشغيل!**").complete();
             return;
         }
-        channel.setCurrentGame(game);
+        if (!game.canBypassCurrentGame())
+            channel.setCurrentGame(game);
         game.handle(event);
     }
 
